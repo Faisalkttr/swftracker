@@ -27,9 +27,23 @@ else:
 # ----------------------------------------------------------------------
 fred_ok, fred_msg = fred_status()
 if fred_ok:
-    st.caption(f"✅ {fred_msg}")
-else:
-    st.warning(f"FRED data offline — {fred_msg}")
+    import requests
+    test_series = ["WRESCRTREAS", "WTREGEN", "FDHBFIN", "WFRESTUS"]
+    results = []
+    for sid in test_series:
+        try:
+            r = requests.get("https://api.stlouisfed.org/fred/series/observations",
+                             params={"series_id": sid,
+                                     "api_key": fred_status.__wrapped__()._key() if hasattr(fred_status, '__wrapped__') else "",
+                                     "file_type": "json"}, timeout=10)
+            data = r.json()
+            if r.status_code == 200 and data.get("observations"):
+                results.append(f"✅ {sid}: {len(data['observations'])} obs")
+            else:
+                results.append(f"❌ {sid}: {data.get('error_message', 'no data')}")
+        except Exception as e:
+            results.append(f"⚠️ {sid}: {e}")
+    st.code("\n".join(results))
 
 st.divider()
 
