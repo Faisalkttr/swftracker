@@ -1,0 +1,10 @@
+system,operator,status,scale,trend,notes
+SWIFT,SWIFT (Belgium),Live,"~11,500 institutions; USD ≈ 45–50% of payment value",Share slowly eroding,Messaging standard; gpi for speed
+CIPS,CNY / PBoC,Live,"1,400+ participants across 100+ countries",Expanding,RMB cross-border clearing
+SPFS,Russian CBR,Live,"~550 users; EAEU links",Domestic+regional,Built post-2014; post-sanctions role
+UPI,NPCI (India),Live,"~13B+ txns/month; PayNow link live",Rapid growth,Retail rails going international
+PIX,Central Bank of Brazil),Live,"~2.6B+ txns/month",Rapid growth,Studied by other EM central banks
+mBridge,BIS hub + CN/TH/AE/HK,MVP (2024),Wholesale mCBDC settlement,Advancing,"BIS exited Oct 2024, project continues"
+BRICS Pay,BRICS working group,Concept / pilot,Prototype blockchain bridge,Watch,Bridge concept; not operational at scale
+INSTEX,EU,Defunct,Non-dollar Iran trade,Defunct,Lesson in political limits of rails
+TIPS,ECB,Live,Instant euro settlement,Stable,Wholesale/instant rails in EUR

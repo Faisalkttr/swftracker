@@ -1,0 +1,12 @@
+jurisdiction,name,stage,first_live,scope,note
+Bahamas,Sand Dollar,Live,2020-10,Retail,First national CBDC
+Nigeria,eNaira,Live,2021-10,Retail,Adoption remains low
+Jamaica,JAM-DEX,Live,2022-07,Retail,JMDL wallet rollout
+China,e-CNY,Pilot (large),2020-04,Retail,Hundreds of millions of wallets; mBridge cross-border
+India,Digital Rupee,Pilot,2022-11,Both,Retail + wholesale; programmability
+Russia,Digital Ruble,Pilot,2023-08,Both,Mandatory large-bank rollout planned ~2026
+Eurozone,Digital Euro,Preparation,,Retail,Legislative track ongoing
+Brazil,Drex,Pilot,2023-08,Wholesale,Tokenized deposits focus
+Thailand / HK,mBridge corridors,MVP,2024-06,Wholesale,mBridge with China/UAE; BIS stepped back Oct 2024
+Saudi / UAE,Project Aber,Completed,2020,Wholesale,Joint wholesale experiment
+United States,—,None,,,"Retail CBDC barred by executive order (Jan 2025); stablecoin track instead"

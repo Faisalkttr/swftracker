@@ -1,0 +1,11 @@
+date,fund,country,target_or_theme,sector,btc_related,note
+2025-05,Mubadala,Abu Dhabi,IBIT (BlackRock Bitcoin ETF) — 13F disclosed,Bitcoin ETF,Yes,"~$500M position reported in 13F; verify on SEC EDGAR"
+2025-05,ADQ,Abu Dhabi,Bitcoin ETF exposure — 13F,Bitcoin ETF,Yes,Disclosed options/spot ETF position
+2025-08,Norway GPFG,Norway,Indirect BTC via listed equities (1000s BTC),Bitcoin proxy,Yes,Largest single holder of BTC exposure via stocks
+2025-04,PIF,Saudi Arabia,HUMAIN — national AI compute buildout,AI / Semis,No,Nvidia supply agreements; strategic compute
+2025-02,Mubadala,Abu Dhabi,US AI data-center infrastructure,AI / Infrastructure,No,Long-horizon national capital
+2024-09,PIF,Saudi Arabia,Gaming & semiconductor supply chain,Technology,No,Diversification away from oil revenues
+2024-06,Temasek,Singapore,Deep tech & energy transition,Energy / Tech,No,Selective; FTX write-down shaped crypto posture
+2024-05,Norway GPFG,Norway,Renewables & grid infrastructure,Energy,No,Real-asset tilt
+2025-06,GIC,Singapore,Data centers (Asia),Infrastructure,No,Digital economy infrastructure
+2025-03,Temasek,Singapore,Blockchain infrastructure — selective,Fintech,No,Re-entering selectively post-FTX
