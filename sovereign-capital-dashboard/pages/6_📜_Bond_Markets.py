@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from utils.ui import page_config, quote, source_note
 from utils.io import load_csv
-from utils.fred import fred_series, fred_status, fred_series_with_fallback
+from utils.fred import fred_series, fred_status, fred_series_with_fallback, fred_units
 
 page_config("Level 6 — Bond Markets", "📜")
 st.title("📜 Level 6 · Sovereign Bond Markets")
@@ -80,15 +80,12 @@ else:
             "WFRESTUS",      # Foreign Official Assets
         ])
 
-        if cust is not None and not cust.empty:
-            # Auto-detect units (millions vs billions)
-            val = cust["value"].iloc[-1]
-            scale_label = "($B)"
-            if val > 1e6:  # likely in millions
-                cust_display = cust.copy()
-                cust_display["value"] = cust_display["value"] / 1e6
-            else:
-                cust_display = cust
+     if cust is not None and not cust.empty:
+    if "million" in fred_units(used_series).lower():
+        cust_display = cust.copy()
+        cust_display["value"] = cust_display["value"] / 1_000
+    else:
+        cust_display = cust
 
             fig3 = go.Figure()
             fig3.add_scatter(x=cust_display.index, y=cust_display["value"],
