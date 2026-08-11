@@ -4,7 +4,7 @@ from utils.ui import page_config, quote, source_note, GOLD
 from utils.io import load_csv
 from utils.market_data import snapshot
 from utils.news import fetch_news, QUERIES
-from utils.fred import fred_series, fred_status, fred_series_with_fallback
+from utils.fred import fred_series, fred_status, fred_series_with_fallback, to_billions
 
 page_config("Sovereign Capital Flow Dashboard", "🏛️")
 
@@ -60,12 +60,7 @@ cust, used_series = fred_series_with_fallback([
 ])
 
 if cust is not None and not cust.empty:
-    # Convert to billions if needed (some are in millions)
-    val = cust['value'].iloc[-1]
-    if val > 1e6:  # likely in millions
-        bond_value = f"${val / 1e6:,.0f}B"
-    else:
-        bond_value = f"${val:,.0f}B"
+    bond_value = f"${to_billions(float(cust['value'].iloc[-1]), used_series):,.0f}B"
 else:
     bond_value = "key missing" if not fred_ok else "series unavailable"
 
