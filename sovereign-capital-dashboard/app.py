@@ -4,7 +4,7 @@ from utils.ui import page_config, quote, source_note, GOLD
 from utils.io import load_csv
 from utils.market_data import snapshot
 from utils.news import fetch_news, QUERIES
-from utils.fred import fred_series, fred_status
+from utils.fred import fred_series, fred_status, fred_series_with_fallback
 
 page_config("Sovereign Capital Flow Dashboard", "🏛️")
 
@@ -52,9 +52,20 @@ cbdc_active        = cbdc[cbdc["stage"].str.contains("Live|Pilot|MVP|Preparation
 energy_active      = energy[energy["status"].str.contains("Active", na=False)].shape[0]
 
 # Level 6 live value — exact reason when data is missing
-cust = fred_series("WRESCRTREAS")
+cust, used_series = fred_series_with_fallback([
+    "WRESCRTREAS",   # original
+    "WTREGEN",       # Foreign Holdings of US Treasuries
+    "FDHBFIN",       # Foreign & International Monetary Authority Holdings
+    "WFRESTUS",      # Foreign Official Assets
+])
+
 if cust is not None and not cust.empty:
-    bond_value = f"${cust['value'].iloc[-1]:,.0f}B"
+    # Convert to billions if needed (some are in millions)
+    val = cust['value'].iloc[-1]
+    if val > 1e6:  # likely in millions
+        bond_value = f"${val / 1e6:,.0f}B"
+    else:
+        bond_value = f"${val:,.0f}B"
 else:
     bond_value = "key missing" if not fred_ok else "series unavailable"
 
