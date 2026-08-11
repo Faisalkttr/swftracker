@@ -5,6 +5,9 @@ URL = "https://api.stlouisfed.org/fred/series/observations"
 SERIES = {
     "DGS10": "US 10Y Yield", "DGS2": "US 2Y Yield", "DGS30": "US 30Y Yield",
     "WRESCRTREAS": "Foreign Official Custody: US Treasuries ($B)",
+    "WTREGEN": "Foreign Holdings of US Treasuries ($M)",
+    "FDHBFIN": "Foreign & International Monetary Authority Holdings",
+    "WFRESTUS": "Foreign Official Assets: US Treasuries",
     "WALCL": "Fed Balance Sheet ($M)", "FEDFUNDS": "Fed Funds Rate",
     "TBUI": "Total Marketable Treasury Borrowing ($B)",
 }
@@ -17,7 +20,7 @@ def _key() -> str:
         pass
     if not key:
         key = os.environ.get("FRED_API_KEY", "")
-    return key.strip()                      # kills stray spaces/newlines
+    return key.strip()
 
 def fred_available() -> bool:
     return bool(_key())
@@ -58,8 +61,19 @@ def fred_series(series_id: str, start: str = "2015-01-01"):
             return None
         df = pd.DataFrame(obs)[["date", "value"]]
         df = df[df.value != "."]
+        if df.empty:
+            return None
         df["value"] = df["value"].astype(float)
         df["date"] = pd.to_datetime(df["date"])
         return df.set_index("date").sort_index()
     except Exception:
         return None
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fred_series_with_fallback(candidates: list[str], start: str = "2015-01-01"):
+    """Try multiple series IDs, return the first one that works + which ID was used."""
+    for sid in candidates:
+        df = fred_series(sid, start)
+        if df is not None and not df.empty:
+            return df, sid
+    return None, None
