@@ -9,14 +9,38 @@ SERIES = {
     "TBUI": "Total Marketable Treasury Borrowing ($B)",
 }
 
-def _key():
+def _key() -> str:
+    key = ""
     try:
-        return st.secrets.get("FRED_API_KEY", "") or os.environ.get("FRED_API_KEY", "")
+        key = st.secrets.get("FRED_API_KEY", "") or ""
     except Exception:
-        return os.environ.get("FRED_API_KEY", "")
+        pass
+    if not key:
+        key = os.environ.get("FRED_API_KEY", "")
+    return key.strip()                      # kills stray spaces/newlines
 
 def fred_available() -> bool:
     return bool(_key())
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fred_status():
+    """Probes FRED with DGS10 and returns (ok, message)."""
+    key = _key()
+    if not key:
+        return False, "No FRED_API_KEY found in Streamlit secrets or environment."
+    try:
+        r = requests.get(URL, params={"series_id": "DGS10",
+                                      "api_key": key,
+                                      "file_type": "json"}, timeout=15)
+        try:
+            data = r.json()
+        except Exception:
+            return False, f"FRED returned non-JSON (HTTP {r.status_code})."
+        if r.status_code == 200 and "observations" in data:
+            return True, f"Key OK — FRED returned {len(data['observations'])} observations (probe: DGS10)."
+        return False, f"FRED rejected the request: {data.get('error_message', f'HTTP {r.status_code}')}"
+    except Exception as e:
+        return False, f"Could not reach FRED API: {e}"
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fred_series(series_id: str, start: str = "2015-01-01"):
@@ -30,6 +54,8 @@ def fred_series(series_id: str, start: str = "2015-01-01"):
         if r.status_code != 200:
             return None
         obs = r.json().get("observations", [])
+        if not obs:
+            return None
         df = pd.DataFrame(obs)[["date", "value"]]
         df = df[df.value != "."]
         df["value"] = df["value"].astype(float)
