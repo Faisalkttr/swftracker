@@ -12,8 +12,14 @@ st.dataframe(df.sort_values("date", ascending=False), use_container_width=True, 
 c1, c2 = st.columns(2)
 with c1:
     mix = {"USD": 70, "CNY": 12, "EUR": 6, "INR": 4, "RUB": 3, "Other": 5}
-    st.plotly_chart(go.Figure(go.Pie(labels=mix.keys(), values=mix.values(), hole=.55)),
-                    use_container_width=True)
+    st.plotly_chart(
+        go.Figure(go.Pie(
+            labels=list(mix.keys()),      # ← wrap in list()
+            values=list(mix.values()),    # ← wrap in list()
+            hole=0.55,
+        )),
+        use_container_width=True,
+    )
     source_note("Illustrative settlement mix estimate — replace with your own model / IEA-OPEC flow work.")
 with c2:
     fig = go.Figure()
