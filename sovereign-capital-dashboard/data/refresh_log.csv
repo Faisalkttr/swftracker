@@ -1,0 +1,10 @@
+dataset,as_of,updated_on,source
+cofer_reserve_shares,2025Q4,2026-03-30,IMF COFER
+cb_gold_annual,2025,2026-02-05,WGC Gold Demand Trends Q4-2025
+cb_gold_buyers,2024,2026-02-05,WGC Gold Demand Trends Q4-2025
+swift_rmb_share,2025-06,2026-02-12,SWIFT RMB Tracker
+cbdc_tracker,2026-02,2026-02-15,Atlantic Council CBDC Tracker
+swf_deals,2026-02,2026-02-20,SEC EDGAR 13F + Global SWF
+energy_settlement,2026-02,2026-02-15,Reuters + ministry statements
+institutional_adoption,2026-02,2026-02-20,SEC EDGAR + issuer announcements
+bonds_fiscal,2025,2025-11-10,IMF Fiscal Monitor
