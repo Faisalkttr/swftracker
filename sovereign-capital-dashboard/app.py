@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 from utils.ui import page_config, quote, source_note, GOLD
 from utils.io import load_csv
@@ -23,13 +24,64 @@ else:
     st.info("Market data warming up… (yfinance)")
 
 # ----------------------------------------------------------------------
-# FRED status banner — tells you exactly why live Treasury data is on/off
+# FRED status banner
 # ----------------------------------------------------------------------
 fred_ok, fred_msg = fred_status()
 if fred_ok:
     st.caption(f"✅ {fred_msg}")
 else:
     st.warning(f"FRED data offline — {fred_msg}")
+
+# ----------------------------------------------------------------------
+# Data freshness system
+# ----------------------------------------------------------------------
+try:
+    log = load_csv("refresh_log.csv")
+    log["updated_on"] = pd.to_datetime(log["updated_on"], errors="coerce")
+    age_days = {r.dataset: (pd.Timestamp.now() - r.updated_on).days
+                for _, r in log.iterrows() if pd.notna(r.updated_on)}
+    as_of = dict(zip(log["dataset"], log["as_of"]))
+    freshness_available = True
+except Exception:
+    freshness_available = False
+    age_days, as_of = {}, {}
+
+REFRESH_MAP = {
+    "1": ["cofer_reserve_shares"],
+    "2": ["cb_gold_annual", "cb_gold_buyers"],
+    "3": ["swf_deals"],
+    "4": ["energy_settlement"],
+    "5": ["swift_rmb_share", "cbdc_tracker"],
+    "6": None,                            # live FRED — always fresh
+    "7": ["institutional_adoption"],
+}
+
+FRESH_DAYS, WARN_DAYS = 120, 270
+
+def freshness_badge(level_num: str) -> str:
+    ds = REFRESH_MAP.get(level_num)
+    if ds is None:
+        return ("<span style='font-size:.68rem;color:#5ee08a;white-space:nowrap'>"
+                "● LIVE · FRED</span>")
+    names = ds if isinstance(ds, list) else [ds]
+    ages = [age_days.get(n, 9999) for n in names]
+    worst = max(ages) if ages else 9999
+    period = as_of.get(names[ages.index(worst)], "?") if ages else "?"
+    if worst <= FRESH_DAYS:
+        color = "#5ee08a"
+    elif worst <= WARN_DAYS:
+        color = "#e0b45e"
+    else:
+        color = "#ff7a7a"
+    return (f"<span style='font-size:.68rem;color:{color};white-space:nowrap'>"
+            f"● as of {period} · {worst}d old</span>")
+
+if freshness_available:
+    stale = sorted([(ds, d) for ds, d in age_days.items() if d > FRESH_DAYS],
+                   key=lambda x: -x[1])
+    if stale:
+        st.warning("⚠️ Datasets past the 120-day refresh window: " +
+                   ", ".join(f"{ds} ({d}d)" for ds, d in stale))
 
 st.divider()
 
@@ -51,14 +103,9 @@ rmb_now, rmb_base  = rmb["rmb_share_pct"].iloc[-1], rmb["rmb_share_pct"].iloc[0]
 cbdc_active        = cbdc[cbdc["stage"].str.contains("Live|Pilot|MVP|Preparation", na=False)].shape[0]
 energy_active      = energy[energy["status"].str.contains("Active", na=False)].shape[0]
 
-# Level 6 live value — exact reason when data is missing
-cust, used_series = fred_series_with_fallback([
-    "WRESCRTREAS",   # original
-    "WTREGEN",       # Foreign Holdings of US Treasuries
-    "FDHBFIN",       # Foreign & International Monetary Authority Holdings
-    "WFRESTUS",      # Foreign Official Assets
-])
-
+# Level 6 live value — fallback series + unit normalization
+cust, used_series = fred_series_with_fallback(
+    ["WRESCRTREAS", "WTREGEN", "FDHBFIN", "WFRESTUS"])
 if cust is not None and not cust.empty:
     bond_value = f"${to_billions(float(cust['value'].iloc[-1]), used_series):,.0f}B"
 else:
@@ -101,7 +148,10 @@ for row in (cards[0:3], cards[3:7]):
             st.markdown(f"""
             <div style="background:#14161c;border:1px solid #262a33;border-radius:12px;
                         padding:16px;height:100%">
-              <div style="color:#8a8f98;font-size:.75rem">LEVEL {num}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="color:#8a8f98;font-size:.75rem">LEVEL {num}</div>
+                {freshness_badge(num) if freshness_available else ""}
+              </div>
               <div style="font-size:1.05rem;font-weight:700">{title}</div>
               <div style="color:#8a8f98;font-size:.8rem;margin:6px 0">{sub}</div>
               <div style="font-size:1.15rem;font-weight:700;color:{GOLD}">{value}</div>
@@ -118,11 +168,11 @@ def norm(x, lo, hi):
 
 
 rdi = round(100 * (
-    0.25 * norm(gold_now, 200, 1100) +        # official gold buying
-    0.25 * norm(71 - usd_now, 0, 15) +        # USD share erosion
-    0.15 * norm(rmb_now, 1.5, 5) +            # RMB payment share
-    0.15 * norm(cbdc_active, 0, 12) +         # parallel rails live
-    0.20 * norm(energy_active, 0, 6)          # non-USD energy corridors
+    0.25 * norm(gold_now, 200, 1100) +
+    0.25 * norm(71 - usd_now, 0, 15) +
+    0.15 * norm(rmb_now, 1.5, 5) +
+    0.15 * norm(cbdc_active, 0, 12) +
+    0.20 * norm(energy_active, 0, 6)
 ))
 
 fig = go.Figure(go.Indicator(
@@ -155,5 +205,16 @@ for t, topic in zip(tabs, QUERIES.keys()):
             st.caption(f"{item['source']} · {item['published']}")
 
 st.divider()
+
+# ----------------------------------------------------------------------
+# Data freshness log
+# ----------------------------------------------------------------------
+if freshness_available:
+    st.subheader("🗓 Data freshness log")
+    show = log.sort_values("updated_on", ascending=False).copy()
+    show["days_since_update"] = show["dataset"].map(age_days)
+    st.dataframe(show[["dataset", "as_of", "updated_on", "days_since_update", "source"]],
+                 use_container_width=True, hide_index=True)
+
 quote("The biggest clue is not what they say. It's what goes on the balance sheet.")
 source_note("Educational research dashboard — not investment advice. Curated CSVs are snapshots; verify against official sources.")
