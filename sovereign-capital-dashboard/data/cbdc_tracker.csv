@@ -4,9 +4,9 @@ Nigeria,eNaira,Live,2021-10,Retail,Adoption remains low
 Jamaica,JAM-DEX,Live,2022-07,Retail,JMDL wallet rollout
 China,e-CNY,Live (large-scale),2020-04,Retail,"World's largest live CBDC: 230M+ wallets, $2.3T cumulative txns (Nov 2025); interest-bearing wallets from Jan 2026"
 India,Digital Rupee,Pilot,2022-11,Both,Retail + wholesale; programmability
-Russia,Digital Ruble,Live (mandated, phased),2023-08,Both,"Mandatory for 12 systemically important banks + large retailers from Sep 1 2026; full rollout phased through 2028"
-Eurozone,Digital Euro,Preparation (technical build, post-legislative-vote),,Retail,"Preparation phase closed Oct 2025; EU Parliament ECON approved regulation Jun 2026; pilots targeted mid-2027, issuance ~2029"
+Russia,Digital Ruble,"Live (mandated, phased)",2023-08,Both,"Mandatory for 12 systemically important banks + large retailers from Sep 1 2026; full rollout phased through 2028"
+Eurozone,Digital Euro,"Preparation (technical build, post-legislative-vote)",,Retail,"Preparation phase closed Oct 2025; EU Parliament ECON approved regulation Jun 2026; pilots targeted mid-2027, issuance ~2029"
 Brazil,Drex,Pilot,2023-08,Wholesale,"Abandoned DLT/blockchain approach Aug 2025; narrowed to collateral mgmt; phase-1 (non-DLT) launch targeted mid-2026"
-Thailand / HK,mBridge corridors,Live (wholesale, scaling),2024-06,Wholesale,"$55B+ cumulative settled (~95% e-CNY); Macao banks joined Jun 2026; BIS exited Oct 2024, governance now with member central banks"
+Thailand / HK,mBridge corridors,"Live (wholesale, scaling)",2024-06,Wholesale,"$55B+ cumulative settled (~95% e-CNY); Macao banks joined Jun 2026; BIS exited Oct 2024, governance now with member central banks"
 Saudi / UAE,Project Aber,Completed,2020,Wholesale,Joint wholesale experiment
 United States,—,None,,,"Retail CBDC barred by executive order (Jan 2025); stablecoin track instead"
