@@ -35,16 +35,24 @@ else:
 # ----------------------------------------------------------------------
 # Data freshness system
 # ----------------------------------------------------------------------
+DEFAULT_CADENCE_DAYS = 120  # fallback if refresh_log.csv has no cadence column
+
 try:
     log = load_csv("refresh_log.csv")
     log["updated_on"] = pd.to_datetime(log["updated_on"], errors="coerce")
     age_days = {r.dataset: (pd.Timestamp.now() - r.updated_on).days
                 for _, r in log.iterrows() if pd.notna(r.updated_on)}
     as_of = dict(zip(log["dataset"], log["as_of"]))
+    if "expected_cadence_days" in log.columns:
+        cadence = {r.dataset: (int(r.expected_cadence_days)
+                                if pd.notna(r.expected_cadence_days) else DEFAULT_CADENCE_DAYS)
+                   for _, r in log.iterrows()}
+    else:
+        cadence = {}
     freshness_available = True
 except Exception:
     freshness_available = False
-    age_days, as_of = {}, {}
+    age_days, as_of, cadence = {}, {}, {}
 
 REFRESH_MAP = {
     "1": ["cofer_reserve_shares"],
@@ -56,7 +64,11 @@ REFRESH_MAP = {
     "7": ["institutional_adoption"],
 }
 
-FRESH_DAYS, WARN_DAYS = 120, 270
+
+def dataset_cadence(name: str) -> int:
+    """Expected refresh cadence for a dataset, from refresh_log.csv, with a flat fallback."""
+    return cadence.get(name, DEFAULT_CADENCE_DAYS)
+
 
 def freshness_badge(level_num: str) -> str:
     ds = REFRESH_MAP.get(level_num)
@@ -64,12 +76,16 @@ def freshness_badge(level_num: str) -> str:
         return ("<span style='font-size:.68rem;color:#5ee08a;white-space:nowrap'>"
                 "● LIVE · FRED</span>")
     names = ds if isinstance(ds, list) else [ds]
-    ages = [age_days.get(n, 9999) for n in names]
-    worst = max(ages) if ages else 9999
-    period = as_of.get(names[ages.index(worst)], "?") if ages else "?"
-    if worst <= FRESH_DAYS:
+    # Judge each dataset against its OWN cadence, then take the worst (most overdue) ratio,
+    # so a monthly series (e.g. SWIFT) and an annual series (e.g. WGC gold) aren't held
+    # to the same fixed day-count.
+    ratios = [(age_days.get(n, 9999) / max(dataset_cadence(n), 1), n) for n in names]
+    worst_ratio, worst_name = max(ratios) if ratios else (999, names[0])
+    worst = age_days.get(worst_name, 9999)
+    period = as_of.get(worst_name, "?")
+    if worst_ratio <= 1:
         color = "#5ee08a"
-    elif worst <= WARN_DAYS:
+    elif worst_ratio <= 2:
         color = "#e0b45e"
     else:
         color = "#ff7a7a"
@@ -77,11 +93,12 @@ def freshness_badge(level_num: str) -> str:
             f"● as of {period} · {worst}d old</span>")
 
 if freshness_available:
-    stale = sorted([(ds, d) for ds, d in age_days.items() if d > FRESH_DAYS],
-                   key=lambda x: -x[1])
+    stale = sorted(
+        [(ds, d, dataset_cadence(ds)) for ds, d in age_days.items() if d > dataset_cadence(ds)],
+        key=lambda x: -(x[1] / max(x[2], 1)))
     if stale:
-        st.warning("⚠️ Datasets past the 120-day refresh window: " +
-                   ", ".join(f"{ds} ({d}d)" for ds, d in stale))
+        st.warning("⚠️ Datasets past their expected refresh cadence: " +
+                   ", ".join(f"{ds} ({d}d old, expected every {c}d)" for ds, d, c in stale))
 
 st.divider()
 
@@ -200,6 +217,62 @@ source_note("Composite of curated datasets below — weights documented in app.p
 st.divider()
 
 # ----------------------------------------------------------------------
+# Full PDF report export
+# ----------------------------------------------------------------------
+st.subheader("📄 Full report export")
+st.caption("Generates a print-ready PDF snapshot of every curated dataset on this dashboard "
+           "(reserves, gold, SWF deals, energy corridors, payment rails, fiscal, institutional stack).")
+
+pdf_col1, pdf_col2 = st.columns([1, 3])
+with pdf_col1:
+    generate_clicked = st.button("Generate PDF Report", type="primary")
+
+if generate_clicked:
+    with st.spinner("Building report…"):
+        from utils.pdf_report import generate_report_pdf
+
+        # Two datasets aren't otherwise loaded on the home page — pull them
+        # only when the report is actually requested.
+        gold_buyers = load_csv("cb_gold_buyers.csv")
+        bonds_fiscal = load_csv("bonds_fiscal.csv")
+
+        report_datasets = {
+            "cofer": cofer,
+            "gold_annual": gold_y,
+            "gold_buyers": gold_buyers,
+            "swift_rmb": rmb,
+            "cbdc": cbdc,
+            "energy": energy,
+            "swf": swf,
+            "institutional": inst,
+            "bonds_fiscal": bonds_fiscal,
+            "refresh_log": log if freshness_available else None,
+        }
+        report_meta = {
+            "generated_at": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M"),
+            "rdi": rdi,
+            "cards": [
+                {"level": num, "title": title, "sub": sub, "value": value,
+                 "signal": ("hot" if "chip-hot" in chip_html else
+                            "neg" if "chip-neg" in chip_html else "ok")}
+                for num, title, sub, value, chip_html in cards
+            ],
+        }
+        st.session_state["pdf_report_bytes"] = generate_report_pdf(report_datasets, report_meta)
+        st.session_state["pdf_report_name"] = f"sovereign_capital_report_{pd.Timestamp.now().strftime('%Y%m%d')}.pdf"
+
+if "pdf_report_bytes" in st.session_state:
+    with pdf_col2:
+        st.download_button(
+            "⬇️ Download PDF Report",
+            data=st.session_state["pdf_report_bytes"],
+            file_name=st.session_state["pdf_report_name"],
+            mime="application/pdf",
+        )
+
+st.divider()
+
+# ----------------------------------------------------------------------
 # Signal news wire
 # ----------------------------------------------------------------------
 st.subheader("📡 Signal wire")
@@ -222,7 +295,12 @@ if freshness_available:
     st.subheader("🗓 Data freshness log")
     show = log.sort_values("updated_on", ascending=False).copy()
     show["days_since_update"] = show["dataset"].map(age_days)
-    st.dataframe(show[["dataset", "as_of", "updated_on", "days_since_update", "source"]],
+    display_cols = ["dataset", "as_of", "updated_on", "days_since_update", "source"]
+    if "expected_cadence_days" in show.columns:
+        display_cols.insert(4, "expected_cadence_days")
+    if "cadence_note" in show.columns:
+        display_cols.append("cadence_note")
+    st.dataframe(show[display_cols],
                  use_container_width=True, hide_index=True)
 
 quote("The biggest clue is not what they say. It's what goes on the balance sheet.")
