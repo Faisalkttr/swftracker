@@ -1,10 +1,10 @@
-dataset,as_of,updated_on,source
-cofer_reserve_shares,2025Q4,2026-09-20,IMF COFER (post-imputation methodology)
-cb_gold_annual,2025,2026-02-05,WGC Gold Demand Trends Q4-2025
-cb_gold_buyers,2025,2026-09-20,WGC Gold Demand Trends FY-2025 + Kitco
-swift_rmb_share,2026-06,2026-09-20,SWIFT RMB Tracker / Global Currency Tracker
-cbdc_tracker,2026-08,2026-09-20,Atlantic Council CBDC Tracker + central bank announcements
-swf_deals,2026-08,2026-09-20,SEC EDGAR 13F + Global SWF
-energy_settlement,2026-08,2026-09-20,Reuters + ministry statements + IRIAS
-institutional_adoption,2026-08,2026-09-20,SEC EDGAR + issuer announcements + CNBC/CoinDesk
-bonds_fiscal,2026,2026-09-20,IMF Fiscal Monitor / WEO April-2026
+dataset,as_of,updated_on,source,expected_cadence_days,cadence_note
+cofer_reserve_shares,2025Q4,2026-09-20,IMF COFER (post-imputation methodology),90,Quarterly IMF release
+cb_gold_annual,2025,2026-09-20,WGC Gold Demand Trends FY-2025,365,Annual WGC full-year figure (Jan/Feb); prior-year revisions common
+cb_gold_buyers,2025,2026-09-20,WGC Gold Demand Trends FY-2025 + Kitco,365,Annual WGC full-year figure (Jan/Feb)
+swift_rmb_share,2026-06,2026-09-20,SWIFT RMB Tracker / Global Currency Tracker,30,Monthly SWIFT release
+cbdc_tracker,2026-08,2026-09-20,Atlantic Council CBDC Tracker + central bank announcements,90,No fixed schedule; quarterly check + event-driven on major status changes
+swf_deals,2026-08,2026-09-20,SEC EDGAR 13F + Global SWF,90,Quarterly 13F filing cycle (45 days after quarter-end); event-driven between
+energy_settlement,2026-08,2026-09-20,Reuters + ministry statements + IRIAS,90,Event-driven; no fixed schedule -- quarterly check recommended
+institutional_adoption,2026-08,2026-09-20,SEC EDGAR + issuer announcements + CNBC/CoinDesk,90,Event-driven; no fixed schedule -- quarterly check recommended
+bonds_fiscal,2026,2026-09-20,IMF Fiscal Monitor / WEO April-2026,182,Semi-annual IMF release (April / October)
