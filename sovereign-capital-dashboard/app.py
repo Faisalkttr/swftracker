@@ -103,6 +103,15 @@ rmb_now, rmb_base  = rmb["rmb_share_pct"].iloc[-1], rmb["rmb_share_pct"].iloc[0]
 cbdc_active        = cbdc[cbdc["stage"].str.contains("Live|Pilot|MVP|Preparation", na=False)].shape[0]
 energy_active      = energy[energy["status"].str.contains("Active", na=False)].shape[0]
 
+# SWF deal window — computed from actual data span rather than hardcoded,
+# since the tracked window grows every time new deals are appended.
+swf_dates = pd.to_datetime(swf["date"], format="%Y-%m", errors="coerce")
+if swf_dates.notna().any():
+    swf_span_months = (swf_dates.max().to_period("M") - swf_dates.min().to_period("M")).n
+    swf_window_label = f"Tracked deals, ~{swf_span_months} months"
+else:
+    swf_window_label = "Tracked deals"
+
 # Level 6 live value — fallback series + unit normalization
 cust, used_series = fred_series_with_fallback(
     ["WRESCRTREAS", "WTREGEN", "FDHBFIN", "WFRESTUS"])
@@ -123,7 +132,7 @@ cards = [
     ("2", "🥇 Central-Bank Gold Buying", "Net official purchases, latest year",
      f"{gold_now:,.0f}t (5y avg {gold_avg:,.0f}t)",
      chip("hot", "ACCUMULATING") if gold_now > 800 else chip("ok", "NORMAL")),
-    ("3", "🌐 Sovereign Wealth Funds", "Tracked deals, 24 months",
+    ("3", "🌐 Sovereign Wealth Funds", swf_window_label,
      f"{len(swf)} deals · {(swf['btc_related'] == 'Yes').sum()} BTC-linked",
      chip("hot", "REPOSITIONING")),
     ("4", "⚡ Energy Settlement", "Active non-USD corridors",
